@@ -25,20 +25,20 @@ const SLIDE_SIZE = { w: 1600, h: 900 };
 const PPT_W = 10;
 const PPT_H = 5.625;
 const COLORS = {
-  border: 'C95C5C',
-  fillLight: 'F6EFEF',
-  fillDark: 'EBDDDB',
-  text: '2D2D2D',
+  border: 'D35A5A',
+  fillLight: 'FAF2F2',
+  fillDark: 'EEDDDD',
+  text: '2A2A2A',
   title: 'FFF8EA'
 };
 const LAYOUT = {
-  title: { x: 800, viY: 58, enY: 99, viSize: 29, enSize: 21, width: 1120 },
+  title: { x: 800, viY: 118, enY: 153, viSize: 34, enSize: 25, width: 1220 },
   table: {
-    x: 174,
-    y: 206,
-    bottom: 824,
-    cols: [105, 239, 246, 192, 236, 246],
-    headerHeights: [49, 40, 41, 40]
+    x: 150,
+    y: 184,
+    bottom: 745,
+    cols: [90, 227, 223, 175, 215, 215],
+    headerHeights: [29, 29, 40, 54]
   }
 };
 
@@ -385,8 +385,8 @@ function drawTitles(ctx) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'top';
 
-  ctx.font = `700 ${LAYOUT.title.viSize}px "Times New Roman", serif`;
-  wrapCentered(ctx, title, LAYOUT.title.x, LAYOUT.title.viY, 34, LAYOUT.title.width);
+  ctx.font = `400 ${LAYOUT.title.viSize}px "Times New Roman", serif`;
+  wrapCentered(ctx, title, LAYOUT.title.x, LAYOUT.title.viY, 38, LAYOUT.title.width);
 
   ctx.font = `400 ${LAYOUT.title.enSize}px "Times New Roman", serif`;
   wrapCentered(ctx, subtitle, LAYOUT.title.x, LAYOUT.title.enY, 30, LAYOUT.title.width);
@@ -431,7 +431,7 @@ function drawTable(ctx) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const lines = String(txt).split('\n');
-    const lineH = fontSize * 1.08;
+    const lineH = fontSize * 1.04;
     const startY = y + h / 2 - ((lines.length - 1) * lineH) / 2;
     lines.forEach((line, i) => ctx.fillText(line, x + w / 2, startY + i * lineH, w - 8));
   };
@@ -489,7 +489,7 @@ function drawTable(ctx) {
     const vals = [row.stt, row.code, row.buyCash, row.buyTransfer, row.sellCash, row.sellTransfer];
     vals.forEach((val, colIdx) => {
       drawRect(x, y, cols[colIdx], rh, fill, `#${COLORS.border}`);
-      drawText(val || '-', x, y, cols[colIdx], rh, colIdx === 1 ? 18 : 17, colIdx === 1, `#${COLORS.text}`);
+      drawText(val || '-', x, y, cols[colIdx], rh, colIdx === 1 ? 17 : 16, colIdx === 1, `#${COLORS.text}`);
       x += cols[colIdx];
     });
     y += rh;
@@ -501,7 +501,7 @@ function buildTableLayout() {
   const totalHeader = headerHeights.reduce((a, b) => a + b, 0);
   const available = Math.max(240, LAYOUT.table.bottom - LAYOUT.table.y - totalHeader);
   const rows = Math.max(1, state.rows.length || 1);
-  const rowH = Math.max(22, Math.min(32, Math.floor(available / rows)));
+  const rowH = Math.max(22, Math.min(29, Math.round(available / rows)));
   return {
     headerHeights,
     rowHeights: Array.from({ length: rows }, () => rowH)
@@ -514,41 +514,8 @@ function drawFooter(ctx) {
 
 
 function drawAnimatedFrame(canvas, progress) {
-  const p = Math.max(0, Math.min(1, Number(progress) || 0));
+  // Keep the exported video visually identical to the slide: one clean static frame.
   drawToCanvas(canvas, 1);
-  const ctx = canvas.getContext('2d');
-  const w = SLIDE_SIZE.w;
-  const h = SLIDE_SIZE.h;
-
-  // Gentle live motion so the exported video doesn't look like a still image.
-  const intro = Math.min(1, p / 0.16);
-  const sweepX = -w * 0.35 + p * w * 1.5;
-  const sweepAlpha = 0.08 + 0.06 * Math.sin(p * Math.PI * 4);
-
-  ctx.save();
-  ctx.fillStyle = `rgba(255,255,255,${(1 - intro) * 0.14})`;
-  ctx.fillRect(0, 0, w, h);
-
-  // Moving light sweep.
-  ctx.globalCompositeOperation = 'screen';
-  ctx.translate(sweepX, 0);
-  ctx.rotate(-0.22);
-  const band = ctx.createLinearGradient(-120, 0, 120, 0);
-  band.addColorStop(0, 'rgba(255,255,255,0)');
-  band.addColorStop(0.5, `rgba(255,255,255,${sweepAlpha})`);
-  band.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = band;
-  ctx.fillRect(-90, -120, 180, h + 240);
-  ctx.restore();
-
-  // Small breathing pulse near the footer.
-  ctx.save();
-  ctx.globalAlpha = 0.24 + 0.1 * Math.sin(p * Math.PI * 8);
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(1510, 84, 10 + 4 * Math.sin(p * Math.PI * 4), 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
 }
 
 async function exportPptx() {
@@ -593,7 +560,8 @@ async function exportVideo() {
       }
     }
 
-    const mimeType = pickMimeType();
+    // Audio in exported videos is more reliable when we wait for the track to be live
+    // before starting the recorder.
     const stream = canvas.captureStream(24);
     let combinedStream = stream;
     let audio = null;
@@ -604,8 +572,11 @@ async function exportVideo() {
         const music = typeof AGRIBANK_MUSIC_DATA === 'string' ? AGRIBANK_MUSIC_DATA : '';
         if (music) {
           audio = new Audio(music);
+          audio.preload = 'auto';
           audio.loop = false;
-          audio.volume = 0.85;
+          audio.volume = 0.95;
+          audio.muted = false;
+          audio.crossOrigin = 'anonymous';
           const audioPack = await captureAudioStream(audio);
           if (audioPack.stream) {
             combinedStream = new MediaStream([
@@ -622,7 +593,9 @@ async function exportVideo() {
 
     drawAnimatedFrame(canvas, 0);
 
-    const options = mimeType ? { mimeType, videoBitsPerSecond: 1000000 } : { videoBitsPerSecond: 1000000 };
+    // Prefer a WebM encoder when audio is enabled; it is the most stable path in browsers.
+    const mimeType = els.musicToggle.checked ? pickWebmMimeType() : pickMimeType();
+    const options = mimeType ? { mimeType, videoBitsPerSecond: 1000000, audioBitsPerSecond: 128000 } : { videoBitsPerSecond: 1000000, audioBitsPerSecond: 128000 };
     const recorder = new MediaRecorder(combinedStream, options);
     const chunks = [];
 
@@ -654,12 +627,13 @@ async function exportVideo() {
     if (audio) {
       try {
         await audio.play();
+        await waitForAudioStart(audio);
       } catch (err) {
         console.warn(err);
       }
     }
 
-    recorder.start(500);
+    recorder.start(250);
 
     const start = performance.now();
     let stopped = false;
@@ -674,7 +648,7 @@ async function exportVideo() {
       drawAnimatedFrame(canvas, progress);
 
       els.progressBar.style.width = `${Math.round(progress * 100)}%`;
-      els.progressText.textContent = `Đang ghi video: ${formatTime(elapsed)} / ${formatTime(durationMs)}${els.musicToggle.checked ? ' (khớp nhạc nền)' : ''}`;
+      els.progressText.textContent = `Đang ghi video: ${formatTime(elapsed)} / ${formatTime(durationMs)}${els.musicToggle.checked ? ' (đã ghép nhạc nền)' : ''}`;
 
       if (elapsed >= durationMs) {
         stopped = true;
@@ -688,7 +662,7 @@ async function exportVideo() {
 
     const blob = await blobPromise;
     const url = URL.createObjectURL(blob);
-    const ext = /mp4/i.test(recorder.mimeType || '') ? 'mp4' : 'webm';
+    const ext = /webm/i.test(recorder.mimeType || '') ? 'webm' : (/mp4/i.test(recorder.mimeType || '') ? 'mp4' : 'webm');
     const fname = buildBaseFileName() + '.' + ext;
 
     els.downloadLink.hidden = false;
@@ -703,7 +677,7 @@ async function exportVideo() {
     }
 
     setBusy(false);
-    els.progressText.textContent = `Đã tạo xong ${fname}${els.musicToggle.checked ? ' (video có chuyển động và khớp thời lượng nhạc nền)' : ''}`;
+    els.progressText.textContent = `Đã tạo xong ${fname}${els.musicToggle.checked ? ' (video có âm thanh)' : ''}`;
   } catch (err) {
     console.error(err);
     setBusy(false);
@@ -726,6 +700,44 @@ function pickMimeType() {
     }
   }
   return '';
+}
+
+function pickWebmMimeType() {
+  const list = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm;codecs=vp8',
+    'video/webm'
+  ];
+  for (const type of list) {
+    if (window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(type)) {
+      return type;
+    }
+  }
+  return '';
+}
+
+function waitForAudioStart(audio) {
+  return new Promise(resolve => {
+    if (!audio) {
+      resolve();
+      return;
+    }
+    if (!audio.paused && audio.currentTime > 0) {
+      resolve();
+      return;
+    }
+    const done = () => {
+      audio.removeEventListener('playing', done);
+      audio.removeEventListener('timeupdate', done);
+      audio.removeEventListener('canplay', done);
+      resolve();
+    };
+    audio.addEventListener('playing', done, { once: true });
+    audio.addEventListener('timeupdate', done, { once: true });
+    audio.addEventListener('canplay', done, { once: true });
+    setTimeout(done, 500);
+  });
 }
 
 async function ensureMusicLoaded() {
