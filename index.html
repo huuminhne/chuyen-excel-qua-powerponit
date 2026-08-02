@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PowerPoint & Video Tỷ Giá</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <div class="brand-badge">TG</div>
+      <div class="hero-copy">
+        <h1>Tạo PowerPoint và video theo mẫu</h1>
+        <p>Nhập file Excel, sửa nhanh nội dung, rồi xuất ra PowerPoint hoặc video với bố cục giống mẫu đã gửi.</p>
+      </div>
+      <div class="hero-chip">Chạy trực tiếp trên trình duyệt</div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>1. Nạp dữ liệu</h2>
+          <button class="ghost" id="loadSampleBtn" type="button">Dùng mẫu có sẵn</button>
+        </div>
+
+        <label class="dropzone" id="dropzone">
+          <input id="fileInput" type="file" accept=".xlsx,.xls" />
+          <strong>Kéo thả file Excel vào đây</strong>
+          <span>hoặc bấm để chọn file .xlsx / .xls</span>
+        </label>
+        <div id="fileInfo" class="file-info"></div>
+        <div id="parseStatus" class="status"></div>
+
+        <div class="grid-2">
+          <div class="field">
+            <label for="viTitle">Tiêu đề tiếng Việt</label>
+            <input id="viTitle" type="text" />
+          </div>
+          <div class="field">
+            <label for="enTitle">Tiêu đề tiếng Anh</label>
+            <input id="enTitle" type="text" />
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button id="addRowBtn" class="primary" type="button">+ Thêm dòng</button>
+          <button id="resetBtn" class="ghost" type="button">Khôi phục mẫu</button>
+        </div>
+      </section>
+
+      <section class="panel preview-panel">
+        <div class="panel-head">
+          <h2>2. Xem trước</h2>
+          <div class="inline-actions">
+            <label class="check">
+              <input id="musicToggle" type="checkbox" />
+              <span>Nhạc nền khi tạo video</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="preview-frame">
+          <canvas id="previewCanvas" width="1600" height="900"></canvas>
+        </div>
+
+        <div class="export-row">
+          <div class="field compact">
+            <label for="videoDuration">Thời lượng video</label>
+            <select id="videoDuration">
+              <option value="10000">10 giây</option>
+              <option value="15000">15 giây</option>
+              <option value="30000" selected>30 giây</option>
+              <option value="60000">60 giây</option>
+            </select>
+          </div>
+
+          <button id="exportPptxBtn" class="primary" type="button">Xuất PowerPoint</button>
+          <button id="exportVideoBtn" class="primary alt" type="button">Tạo video</button>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap" hidden>
+          <div class="progress-bar"><span id="progressBar"></span></div>
+          <div id="progressText" class="status"></div>
+        </div>
+
+        <a id="downloadLink" class="download-link" hidden>Download</a>
+        <div class="video-preview-wrap" id="videoPreviewWrap" hidden>
+          <div class="video-preview-title">Xem trước video vừa tạo</div>
+          <video id="videoPreview" class="video-preview" controls playsinline></video>
+        </div>
+      </section>
+    </main>
+
+    <section class="panel table-panel">
+      <div class="panel-head">
+        <h2>3. Chỉnh bảng tỷ giá</h2>
+        <div class="hint">Bấm vào ô để sửa trực tiếp</div>
+      </div>
+
+      <div class="table-scroll">
+        <table class="rates-table">
+          <thead>
+            <tr>
+              <th style="width:70px">STT</th>
+              <th style="width:110px">Ngoại tệ</th>
+              <th>Tỷ giá mua<br><small>Tiền mặt</small></th>
+              <th>Tỷ giá mua<br><small>Chuyển khoản</small></th>
+              <th>Tỷ giá bán<br><small>Tiền mặt</small></th>
+              <th>Tỷ giá bán<br><small>Chuyển khoản</small></th>
+              <th style="width:84px"></th>
+            </tr>
+          </thead>
+          <tbody id="ratesBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <canvas id="exportCanvas" width="1600" height="900" hidden></canvas>
+
+  <script src="xlsx.full.min.js"></script>
+  <script src="pptxgen.bundle.js"></script>
+  <script src="bg-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
