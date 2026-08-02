@@ -34,10 +34,10 @@ const COLORS = {
 const LAYOUT = {
   title: { x: 800, viY: 118, enY: 153, viSize: 34, enSize: 25, width: 1220 },
   table: {
-    x: 150,
+    x: 210,
     y: 184,
     bottom: 745,
-    cols: [90, 227, 223, 175, 215, 215],
+    cols: [96, 235, 230, 180, 220, 220],
     headerHeights: [29, 29, 40, 54]
   }
 };
